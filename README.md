@@ -1,14 +1,15 @@
-Sample-app-BMA220-accelerometer Rev41 for Android Things(TM) Dev. Prev 41 on the Raspberry Pi 3
+Example-Driver-BMA220-accelerometer Rev41 for Android Things(TM) Dev. Prev 41 on the Raspberry Pi 3
 ----------------------------------------------------------------------------------------------
 
-Sample app to showing how to use the Android Things user-space driver:
+You only need these files if you want to modify the driver else the sample app apk already contains the driver. The driver app is an aar file contained in the app/libs folder.  
 
-https://github.com/tyharness/androidthings-example-driver-bma220-accelerometer
+You can find the sample app here:
+https://github.com/tyharness/androidthings-sample-app-bma220-accelerometer
 
 
-This sample app apk already contains the driver. The driver app is an aar file in the app/libs folder.  If you want the latest driver version please visit and download the above driver and copy the bma220-debug.aar file over to the app/libs folder.
+If you want the latest driver version please visit and download the above driver and copy the bma220-debug.aar file over to the app/libs folder.
 
-Please note this software is a demo quality only and no where near production ready -- Use with caution.
+Please note this driver is a demo quality only and no where near production ready -- Use with caution.
 
 ----------------------------------------------------------------------------------------------
 Prerequisties
@@ -44,22 +45,8 @@ Install and Build from the command line:
 
 ./gradlew build
 
-
-Use:
-adb connect Android.local
-
-adb install -r app/build/outputs/apk/app-debug.apk
-
-adb shell am start uk.ty.androidthings.bma220exampleproject/.Bma220Activity
-
-adb logcat|grep Bma220Activity
-
-
-------------------------------------------------------------------------------------------
-Install from Android Studio
-
-to do.
-
+the bma220-debug.aar driver file resides in build/outputs/aar
+copy this over to the sample app app/libs folder.
 
 
 
