@@ -30,8 +30,11 @@ Wiring:
 Please see schematic  .... to do
 
 BMA220(Tiny) 3.3V--- 3.3V  rpi pin
+
 BMA220(Tiny) GND --- GND   rpi pin
+
 BMA220(Tiny) SDA --- SDA   rpi pin
+
 BMA220(Tiny) SCK --- SCK   rpi pin
 
 
