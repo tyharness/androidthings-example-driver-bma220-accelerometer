@@ -22,7 +22,7 @@ public class bma220 implements AutoCloseable {
     public static final int I2C_ADDRESS = 0xA;
     static final float MAX_RANGE_G = 2.f;
     static final float MAX_POWER_UA = 250.f;        //Idd 250uA 25deg C
-    static final float MAX_FREQ_HZ = 2.f;
+    static final float MAX_FREQ_HZ = 100.f;
     static final float MIN_FREQ_HZ = 1.f;
     
     private static final  int Chip_REG      = 0x0;  //8 bit read only
@@ -237,11 +237,11 @@ public class bma220 implements AutoCloseable {
     
     
  
-    public void setFilterAndBandwidth()throws IOException, IllegalStateException {
+    public void setFilterAndBandwidth(int filtermode)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
-         mDevice.writeRegByte(FILTER_REG, setFilter(0) ); 
+         mDevice.writeRegByte(FILTER_REG, setFilter(filtermode)); 
     }
      
     
@@ -253,11 +253,11 @@ public class bma220 implements AutoCloseable {
     } 
     
     
-  public void setRangeMode()throws IOException, IllegalStateException {
+  public void setRangeMode(int rangemode)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
-         mDevice.writeRegByte(RANGE_REG, setRange(0));   
+         mDevice.writeRegByte(RANGE_REG, setRange(rangemode));   
     }
      
     
@@ -270,12 +270,12 @@ public class bma220 implements AutoCloseable {
     
     
    
-  public void setTapDetection()throws IOException, IllegalStateException {
+  public void setTapDetection(byte tap)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
          //set up tapping x,y,z  en_data, en_orient, en_slopez, en_slopey, en_slopex  en_tt_x, en_tt_y, en_tt_z
-         mDevice.writeRegByte(_1A_REG, (byte) 0b00111111);
+         mDevice.writeRegByte(_1A_REG,tap);
     }
      
     
@@ -287,12 +287,12 @@ public class bma220 implements AutoCloseable {
     }      
    
    
-    public void setOrientation()throws IOException, IllegalStateException {
+    public void setOrientation(byte orientate)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
          // 0x12  orient_ex   slope_filt bit 6   slope_th bit5,bit4,bit3,bit2   slope_dur bit1,bit0
-         mDevice.writeRegByte(_12_REG, (byte) 0b01000111);
+         mDevice.writeRegByte(_12_REG,  orientate);
     }
      
     
@@ -363,23 +363,22 @@ public class bma220 implements AutoCloseable {
    
    
    
-  public void setLatching()throws IOException, IllegalStateException {
+  public void setLatching(byte latchmode)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }    
-            //unlatched 
-            // mDevice.writeRegByte(_1C_REG, (byte) 0x00);
-            //Latched or 
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b00010000); //latch time 0.25 secs 001
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b00100000); //latch time 0.5 secs 010
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b00110000); //latch time 1 secs 011
-              mDevice.writeRegByte(_1C_REG, (byte) 0b01000000); //latch time 2 secs 100
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b01010000); //latch time 4 secs 101
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b01110000); //latch time 8 secs 110
-            //mDevice.writeRegByte(_1C_REG, (byte) 0b01110000); //latch time 8 secs 111 permentaly latched         
+        
+           mDevice.writeRegByte(_1C_REG, latchmode);
+                 
     }  
    
-   
+  
+  
+  
+  
+  
+  
+  
    public  int getLatching() throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
@@ -387,22 +386,23 @@ public class bma220 implements AutoCloseable {
         return mDevice.readRegByte(_1C_REG);
     }   
   
-  
-   public void setTapOption()throws IOException, IllegalStateException {
+/////////////////////////////////////////////////////////////////////////  
+   public void setTapOption(byte tapoption)throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
          
-         mDevice.writeRegByte(_14_REG, (byte) 0b00001100);//poke for double tapping
+         mDevice.writeRegByte(_14_REG, tapoption);//poke for double tapping
     }
      
-    
+   
    public  int getTapOption() throws IOException, IllegalStateException {
         if (mDevice == null) {
             throw new IllegalStateException("device not connected");
         }
         return mDevice.readRegByte(_14_REG);
     }   
+///////////////////////////////////////////////////////////////////////////
    
    public boolean getAccelerationState(){
        return accelerationState;
@@ -419,7 +419,14 @@ public float[] readSample() throws IOException, IllegalStateException {
         }
           
         
-         
+            int all_int = mDevice.readRegByte(_18_REG);
+            //has any interrupt been tripped
+            if (all_int > 0x00){ 
+               IntState = true;                             
+            }else
+            {
+             IntState = false;              
+            }
         
         
           int xdata = mDevice.readRegByte(X_REG);  
@@ -460,14 +467,19 @@ public float[] readSample() throws IOException, IllegalStateException {
       float x = d*slope;            
       return x;      
     }     
-    
+   
+ 
+ 
+ /////////////////////////////////////////////////////////////////////////////////////////
   private byte setFilter(int mode){
       
       //Reg 0x20 default 0x00    
       //Filter Config   bit 2    bit 1   bit 0,   
       //bit6, bit5, bit4,bit 3
       //serial high bw bit 7 
-      
+
+      if (mode<0 || mode >5) mode = 0;
+     
       //mode 0 default 0x00
       byte F = 0x00;  //1kHz
      
@@ -489,6 +501,9 @@ public float[] readSample() throws IOException, IllegalStateException {
       //Range  bit 0, bit 1     
       //sbist (off,x,y,z) bit 2 and 3  self test
       //sbist sign bit 4  selftest
+      
+      if (mode<0 || mode >3) mode = 0;
+     
       byte R = 0x00;  //+/- 2g
      
       if (mode == 1)R = 0x01;// +/- 4g

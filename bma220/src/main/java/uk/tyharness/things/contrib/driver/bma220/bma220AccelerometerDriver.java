@@ -193,5 +193,11 @@ public class bma220AccelerometerDriver implements AutoCloseable {
         return mDevice.getAccelerationState();
     } 
     
+    public boolean _getIntState() {
+        return mDevice.getIntState();
+    } 
+    
+    
+    
     
 }
